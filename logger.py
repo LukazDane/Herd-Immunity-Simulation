@@ -9,10 +9,11 @@ class Logger(object):
     def __init__(self, file_name):
         # TODO:  Finish this initialization method. The file_name passed should be the
         # full file name of the file that the logs will be written to.
-        self.file_name = None
+        self.file_name = file_name
+        
 
     def write_metadata(self, pop_size, vacc_percentage, virus_name, mortality_rate,
-                       basic_repro_num):
+                       repro_rate):
         '''
         The simulation class should use this method immediately to log the specific
         parameters of the simulation as the first line of the file.
@@ -23,7 +24,9 @@ class Logger(object):
         # the 'a' mode to append a new log to the end, since 'w' overwrites the file.
         # NOTE: Make sure to end every line with a '/n' character to ensure that each
         # event logged ends up on a separate line!
-        pass
+        with open(self.file_name, mode='w') as f:
+            metadata = f'Pop: {pop_size} \t Vaccinated: {vacc_percentage} \t Virus: {virus_name} \t Mortality: {mortality_rate} \t Reproduction Rate: {repro_rate}\n'
+            f.write(metadata)
 
     def log_interaction(self, person, random_person, random_person_sick=None,
                         random_person_vacc=None, did_infect=None):
@@ -40,7 +43,24 @@ class Logger(object):
         # represent all the possible edge cases. Use the values passed along with each person,
         # along with whether they are sick or vaccinated when they interact to determine
         # exactly what happened in the interaction and create a String, and write to your logfile.
-        pass
+        with open(self.file_name, mode='a') as f:  # opens file again
+            f.write('Interaction Logs: \n')
+            # if the initial carrier infects random person, log interaction
+            if did_infect:
+                infection_status = 'Person: ' + str(
+                    person._id) + ' infects Person: ' + str(random_person._id) + '\n'
+                f.write(infection_status)
+            elif random_person.is_vaccinated:
+                # log random person vaccinatin
+                infection_status = 'Person: ' + str(
+                    person._id) + ' did not infect Person: ' + str(random_person._id) + '\n'
+                f.write(infection_status)
+            else:
+                # log status of virus spread etc
+                infection_status = 'Person: ' + str(person._id) + ' did not infect ' + str(random_person._id) + \
+                    ' because Person: ' + str(random_person._id) + \
+                    ' is vaccinated or already sick.' + '\n'
+                f.write(infection_status)
 
     def log_infection_survival(self, person, did_die_from_infection):
         ''' The Simulation object uses this method to log the results of every
@@ -52,9 +72,16 @@ class Logger(object):
         # TODO: Finish this method. If the person survives, did_die_from_infection
         # should be False.  Otherwise, did_die_from_infection should be True.
         # Append the results of the infection to the logfile
-        pass
+        with open(self.file_name, mode='a') as f:
+            if did_die_from_infection:  # if person() is not dead print it ^^^
+                infection_status = str(person._id) + ' died from infection.' + '\n'
+                f.write(infection_status)
+            else:
+                infection_status = str(person._id) + ' survived the infection.' 
+                f.write(infection_status)
 
-    def log_time_step(self, time_step_number):
+    def log_time_step(self, time_step_number,newly_infected_count, newly_dead_people,
+                    total_infected, total_dead):
         ''' STRETCH CHALLENGE DETAILS:
 
         If you choose to extend this method, the format of the summary statistics logged
@@ -72,4 +99,22 @@ class Logger(object):
         # TODO: Finish this method. This method should log when a time step ends, and a
         # new one begins.
         # NOTE: Here is an opportunity for a stretch challenge!
-        pass
+        with open(self.file_name, mode='a') as f:
+            f.write(f'Time step {time_step_number} ended, '
+                      f'{newly_infected_count} are infected, '
+                      f'{newly_dead_people} recently died, '
+                      f'{total_infected} got infected, '
+                      f'{total_dead} have died, '
+                      f'beginning {time_step_number + 1}...\n')
+    #     with self.open_file('a') as data:
+    #         data.write(f'Time step {time_step_number} ended, '
+    #                   f'{newly_infected_count} are infected, '
+    #                   f'{newly_dead_people} recently died, '
+    #                   f'{total_infected} got infected, '
+    #                   f'{total_dead} have died, '
+    #                   f'beginning {time_step_number + 1}...\n')
+        
+    # def open_file(self, mode='r', buffering=-1, encoding=None, errors=None,
+    #             newline=None, closefd=True, opener=None):
+    #     return open(f'{self.file_name}', mode, buffering, encoding, errors,
+    #                 newline, closefd, opener)
